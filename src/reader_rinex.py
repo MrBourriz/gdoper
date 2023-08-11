@@ -9,7 +9,7 @@
 # Description:
 # Program returns the data for GPS satellites' positions. It first checks if 
 # data for a given day has already been aquired and if not, it retrieves the
-# data from the UNAVCO database and processes it accordingly.
+# data from the ESA database and processes it accordingly.
 #                                                                             #
 ###############################################################################
 
@@ -26,11 +26,12 @@ import pyproj as pp
 import typing as t
 import wget as wget
 import time
-import os
+import os, sys
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, "../src")
 
 import src.common as c
-import src.unavco_stations as s
+import src.Esa_stations as s
 from src.d_print import Print, Debug
 
 # TODO: create directory if it doesn't exist
@@ -41,8 +42,8 @@ R_FOLDER = os.path.dirname(os.path.abspath(__file__) )[:-4]+ '/rinex_files'
 # Required tolerance for the eccentricity anomaly error
 ECC_TOL = 0.001
 
-DEFAULT_STATIONS = ['ac70','ab33','ac15']
-DL_MAX_TRIES = 5
+DEFAULT_STATIONS = ['brdc']
+DL_MAX_TRIES = 10
 
 
 class Satellite:
@@ -115,7 +116,7 @@ class Orbital_data:
     # File name parameters
     self.is_file_available = False
     self.station = DEFAULT_STATIONS[0]
-    self.rinex_file = f'{self.station}{self.gps_day}0.{self.gps_year}n.Z'
+    self.rinex_file = f'{self.station}{self.gps_day}0.{self.gps_year}n.gz' # you can change the extension 
     self.filedir_remote = ''
     self.filedir_local = ''
 
@@ -164,7 +165,7 @@ class Orbital_data:
  
   def change_station(self, new_station: str):
     self.station = new_station
-    self.rinex_file = f'{self.station}{self.gps_day}0.{self.gps_year}n.Z'
+    self.rinex_file = f'{self.station}{self.gps_day}0.{self.gps_year}n.gz'
     self.filedir_remote = self.get_remote_dir()
     self.filedir_local = f'{c.RINEX_FOLDER}/{self.rinex_file}'
     self.is_file_available = False
@@ -248,7 +249,7 @@ class Orbital_data:
     # TODO: reset to normal operation (this is testing mode)
     for n in range(1, nav['sv'].size + 1):
       sat = "G"+f'{n:02}'
-      #p.Print('\\debug',f'Satellite: {sat}')
+      # p.Print('\\debug',f'Satellite: {sat}')
 
       # Create or add data to Satellite object at date of self.utc
       if sat not in self.sats.keys():
@@ -304,12 +305,14 @@ class Orbital_data:
 
 
 if __name__ == '__main__':
+  
+#For testing
 
-  o = Orbital_data('2019-07-10 07:25:31')
+  o = Orbital_data('2021-12-03 07:25:31')
   o.setup()
   o.print_data()
-  #print("Results:\n",o.get_sats_pos(['2019-07-10 08:25:31', '2019-07-10 14:25:31']))
-  o.get_sats_pos(['2019-07-10 08:25:31', '2019-07-10 14:25:31'])
+  print("Results:\n",o.get_sats_pos(['2021-12-03 08:25:31', '2021-12-03 14:25:31']))
+  # o.get_sats_pos(['2021-12-10 08:25:31', '2021-12-10 14:25:31'])
 
 
 # %%
